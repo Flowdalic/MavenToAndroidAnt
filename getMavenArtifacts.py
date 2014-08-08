@@ -8,11 +8,38 @@ import io
 import gnupg
 import sys
 
+httplib2Available = True
+try:
+    import httplib2
+    userHome = os.path.expanduser('~')
+    httplib2CacheDir = userHome + '/.cache/httplib2'
+    if not os.path.exists(httplib2CacheDir):
+        os.makedirs(httplib2CacheDir)
+    h = httplib2.Http(httplib2CacheDir)
+except ImportError:
+    httplib2Available = False
+
 SONATYPE_RELEASE_URL = "https://oss.sonatype.org/content/repositories/releases"
 SONATYPE_SNAPSHOT_URL = "https://oss.sonatype.org/content/repositories/snapshots"
 SNAPSHOT = '-SNAPSHOT'
 SOURCES_REGEX = re.compile('".*sources.jar"')
 JAR_REGEX = re.compile('".*[0-9].jar"')
+
+def downloadFile(url, dest):
+  if httplib2Available:
+    response, content = h.request(url)
+    with open(dest, 'wb') as f:
+      f.write(content)
+  else:
+    urllib.request.urlretrieve(url, dest)
+
+def getDirectoryContent(url):
+  if httplib2Available:
+    response, content = h.request(url)
+    return content.decode('utf-8')
+  else:
+    path = urllib.request.urlopen(remoteUrl)
+    return path.read().decode('utf-8')
 
 class MavenArtifact:
   def __init__(self, groupId, artifactId, version, pgpKeyFingerprint):
@@ -85,8 +112,7 @@ class MavenArtifact:
 
   def getRepositoryDirectoryContent(self):
     remoteUrl = self.getArtifactDirectoryUrl()
-    path = urllib.request.urlopen(remoteUrl)
-    content = path.read().decode('utf-8')
+    content = getDirectoryContent(remoteUrl)
     return content
 
   def placeInProject(self, projectDir):
@@ -100,18 +126,18 @@ class MavenArtifact:
     jarDestFilename = self.jarDestFilename()
     jarDest = libsDir + jarDestFilename
     print("Downloading " + jarDestFilename + " to " + libsDir)
-    urllib.request.urlretrieve(jarUrl, jarDest)
+    downloadFile(jarUrl, jarDest)
     if self.isNonSnapshot():
       jarSigDestFilename = self.jarSigDestFilename()
       jarSigUrl = self.getJarSigUrl()
       jarSigDest = libsDir + jarSigDestFilename
       print("Downloading " + jarSigDestFilename + " to " + libsDir)
-      urllib.request.urlretrieve(jarSigUrl, jarSigDest)
+      downloadFile(jarSigUrl, jarSigDest)
     sourceUrl = self.getSourceUrl();
     sourceDestFilename = self.sourceDestFilename()
     sourceDest = libsSourcesDir + sourceDestFilename
     print("Downloading " + sourceDestFilename + " to " + libsSourcesDir)
-    urllib.request.urlretrieve(sourceUrl, sourceDest)
+    downloadFile(sourceUrl, sourceDest)
     f = open(jarDest + '.properties', 'w+')
     f.write('src=../libs-sources/' + sourceDestFilename)
     f.close()

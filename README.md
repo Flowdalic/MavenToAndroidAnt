@@ -16,6 +16,11 @@ Requirements
 - Python3
 - python-gnupg
 
+Optional Dependencies
+---------------------
+
+- httplib2 - for caching
+
 Usage
 -----
 
