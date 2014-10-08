@@ -38,7 +38,7 @@ def getDirectoryContent(url):
     response, content = h.request(url)
     return content.decode('utf-8')
   else:
-    path = urllib.request.urlopen(remoteUrl)
+    path = urllib.request.urlopen(url)
     return path.read().decode('utf-8')
 
 class MavenArtifact:
