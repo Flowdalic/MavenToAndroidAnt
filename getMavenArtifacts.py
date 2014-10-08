@@ -166,7 +166,7 @@ class MavenArtifact:
         raise Exception("Could not verify signature for " + jar)
 
   def deleteFromProject(self, projectDir):
-    regex = re.compile(self.getArtifactIdAndVersion() + '.*')
+    regex = re.compile(self.artifactId + '.*')
     libDir = projectDir + '/libs/'
     for f in os.listdir(libDir):
       if regex.match(f):
