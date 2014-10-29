@@ -24,7 +24,7 @@ Optional Dependencies
 Usage
 -----
 
-Create a comma separated file in your project with he following syntax:
+Create a comma separated file names `artifacts.csv` in your project with he following syntax:
 
 ```
 <group>,<artifactId>,<version>,<fingerprint>
@@ -33,7 +33,14 @@ Create a comma separated file in your project with he following syntax:
 Use
 
 ```
-getMavenArtifacts -f <filename> -p <projectdir>
+getMavenArtifactsNG.py -p <projectdir>
 ````
 
 to download the artifacts
+
+Legacy Script
+-------------
+
+`getMavenArtifacts.py` is the legacy version of the script.
+There is no reason to use it any more.
+It soley exists for legacy reasons and is no longer maintained.
