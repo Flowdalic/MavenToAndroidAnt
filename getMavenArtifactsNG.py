@@ -174,6 +174,28 @@ class Project:
     if not os.path.exists(self.libsSourcesDir):
       os.makedirs(self.libsSourcesDir)
 
+def processArtifactsFile(artifactsFile, artifacts):
+    versionVariables = {}
+    csvLines = []
+    with open(artifactsFile) as f:
+        for line in f:
+            if '=' in line:
+                versionVariableLine = line.split('=', 1)
+                versionVariables[versionVariableLine[0]] = versionVariableLine[1].rstrip()
+            else:
+                csvLines.append(line)
+        reader = csv.reader(csvLines)
+        for row in reader:
+            groupId = row[0]
+            artifactId = row[1]
+            pgpKeyFingerprint = row[3]
+            if row[2][0] == '$':
+                version = versionVariables[row[2][1:]]
+            else:
+                version = row[2]
+            artifacts.append(MavenArtifact(groupId, artifactId, version, pgpKeyFingerprint))
+
+
 parser = argparse.ArgumentParser()
 parser.add_argument("--project", "-p")
 parser.add_argument("--file", "-f", nargs='*', help="Optional additional artifact files")
@@ -186,17 +208,11 @@ artifacts = []
 
 projectArtifacts = args.project + "/artifacts.csv"
 if os.path.isfile(projectArtifacts):
-  with open(projectArtifacts) as f:
-    reader = csv.reader(f)
-    for row in reader:
-      artifacts.append(MavenArtifact(row[0], row[1], row[2], row[3]))
+  processArtifactsFile(projectArtifacts, artifacts)
 
 for artifactFile in args.file:
   if os.path.isfile(artifactFile):
-    with open(artifactFile) as f:
-      reader = csv.reader(f)
-      for row in reader:
-        artifacts.append(MavenArtifact(row[0], row[1], row[2], row[3]))
+      processArtifactsFile(artifactFile, artifacts)
   else:
     print("Specified file does not exist")
 
